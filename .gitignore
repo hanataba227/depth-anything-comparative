@@ -1,0 +1,6 @@
+.env
+__pycache__/*
+checkpoints/*
+dataset/*
+test/*
+trained_models/*
