@@ -5,9 +5,11 @@ import numpy as np
 import cv2
 from PIL import Image
 from torchvision import transforms
-from student_model_3 import DepthEstimationMobileNetV2
-import sys
+import matplotlib.pyplot as plt
 
+from student_model_3 import DepthEstimationMobileNetV2
+
+import sys
 sys.path.append("C:/project/Depth-Anything-V2")
 from depth_anything_v2.dpt import DepthAnythingV2
 
@@ -49,11 +51,6 @@ def measure_time(model, input_tensor, trials=10, upsample=None):
             times.append(time.perf_counter() - start)
     return np.mean(times), np.std(times)
 
-# === 추론 시간 비교 ===
-teacher_time, teacher_std = measure_time(teacher_model, input_tensor, NUM_TRIALS)
-student_time, student_std = measure_time(student_model, input_tensor, NUM_TRIALS, upsample=UPSAMPLE_SIZE)
-improvement = ((teacher_time - student_time) / teacher_time) * 100
-
 # === 예측 수행 ===
 with torch.no_grad():
     teacher_pred = teacher_model(input_tensor)
@@ -66,31 +63,18 @@ with torch.no_grad():
     student_pred = torch.nn.functional.interpolate(student_pred, size=UPSAMPLE_SIZE, mode='bilinear', align_corners=False)
     student_pred = student_pred.squeeze().detach().cpu().numpy()
 
-# === 정규화 함수 ===
-def to_uint8(depth):
-    depth = (depth - depth.min()) / (depth.max() - depth.min() + 1e-8)
-    return (depth * 255).astype(np.uint8)
+# === 컬러맵 시각화 함수 ===
+def save_colored_depth(depth_np, save_path, cmap='plasma'):
+    depth_norm = (depth_np - depth_np.min()) / (depth_np.max() - depth_np.min() + 1e-8)
+    colormapped = plt.get_cmap(cmap)(depth_norm)[:, :, :3]  # RGBA → RGB
+    colormapped = (colormapped * 255).astype(np.uint8)
+    colormapped_bgr = cv2.cvtColor(colormapped, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(save_path, colormapped_bgr)
 
-# === 시각화용 변환 ===
-teacher_map = to_uint8(teacher_pred)
-student_map = to_uint8(student_pred)
-error_map = np.abs(teacher_map.astype(np.float32) - student_map.astype(np.float32)).astype(np.uint8)
-
-# === 오차 지표 계산 ===
-mae = np.mean(np.abs(teacher_pred - student_pred))
-rmse = np.sqrt(np.mean((teacher_pred - student_pred) ** 2))
+error_map = np.abs(teacher_pred - student_pred)
 
 # === 저장 ===
 os.makedirs("comparison_output", exist_ok=True)
-cv2.imwrite("comparison_output/original.jpg", cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR))
-cv2.imwrite("comparison_output/depth_anything_v2_vitb.png", teacher_map)
-cv2.imwrite("comparison_output/ETRI.png", student_map)
-cv2.imwrite("comparison_output/error_map.png", error_map)
-
-# === 출력 ===
-print(f"\n결과 요약")
-print(f"depth_anything_v2_vitb 평균 추론 시간: {teacher_time:.4f}s ± {teacher_std:.4f}")
-print(f"에트리 모델 평균 추론 시간: {student_time:.4f}s ± {student_std:.4f}")
-print(f"응답속도 개선률: {improvement:.2f}%")
-print(f"MAE (Mean Absolute Error): {mae:.4f}")
-print(f"RMSE (Root Mean Squared Error): {rmse:.4f}")
+save_colored_depth(teacher_pred, "comparison_output/depth_anything_v2_vitb_colored.png")
+save_colored_depth(student_pred, "comparison_output/Student_colored.png")
+save_colored_depth(error_map, "comparison_output/error_map_colored.png", cmap="inferno")

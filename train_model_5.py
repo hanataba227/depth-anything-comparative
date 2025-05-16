@@ -1,11 +1,14 @@
 import os
+import json
+import random
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import torch.nn.functional as F
-from student_model_3 import DepthEstimationMobileNetV2
-from model_dataset_4 import DepthDataset
 from tqdm import tqdm
+
+from student_model_3 import DepthEstimationMobileNetV2
+from model_dataset_4 import JsonDepthDataset
 
 # 디바이스 확인
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -18,20 +21,44 @@ transform = transforms.Compose([
     transforms.Normalize(mean=0.5, std=0.5)
 ])
 
-# Dataset 로딩
-train_dataset = DepthDataset("dataset", transform=transform)
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+# ✅ 사용자 정의 학습 데이터 수 및 DDAD:ETRI 비율 설정
+TOTAL_SIZE = 5000       # 전체 사용할 학습 샘플 수
+ETRI_RATIO = 0.2         # ETRI 비율 (예: 20%)
+
+# 전체 학습 JSON 로딩
+with open("dataset_paths/dataset_paths_train.json", "r") as f:
+    full_data = json.load(f)
+
+# 경로 기준으로 DDAD/ETRI 구분
+etri_data = [item for item in full_data if "/dataset/rgb" in item["rgb"]]
+ddad_data = [item for item in full_data if "/output/rgb" in item["rgb"]]
+
+random.shuffle(etri_data)
+random.shuffle(ddad_data)
+
+etri_count = int(TOTAL_SIZE * ETRI_RATIO)
+ddad_count = TOTAL_SIZE - etri_count
+
+etri_sample = etri_data[:min(etri_count, len(etri_data))]
+ddad_sample = ddad_data[:min(ddad_count, len(ddad_data))]
+
+combined_data = etri_sample + ddad_sample
+random.shuffle(combined_data)
+
+# 임시 저장
+with open("dataset_paths/dataset_paths_filtered.json", "w") as f:
+    json.dump(combined_data, f, indent=2)
+
+# 최종 Dataset 로딩
+dataset = JsonDepthDataset("dataset_paths/dataset_paths_filtered.json", transform=transform)
+train_loader = DataLoader(dataset, batch_size=8, shuffle=True)
 
 # 모델 정의
 model = DepthEstimationMobileNetV2().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 # 학습 설정
-max_epochs = 5
-early_stop_threshold = 0.001
-early_stop_patience = 5
-prev_loss = float('inf')
-patience_counter = 0
+max_epochs = 10
 os.makedirs("trained_models", exist_ok=True)
 
 # 학습 루프
@@ -57,17 +84,6 @@ for epoch in range(1, max_epochs + 1):
 
     avg_loss = total_loss / len(train_loader)
     print(f"Epoch {epoch} 평균 손실: {avg_loss:.4f}")
-
-    # Early stopping
-    if abs(prev_loss - avg_loss) < early_stop_threshold:
-        patience_counter += 1
-        if patience_counter >= early_stop_patience:
-            print(f"Early stopping at epoch {epoch}")
-            break
-    else:
-        patience_counter = 0
-
-    prev_loss = avg_loss
 
 # 모델 저장
 save_path = "trained_models/depth_student_mobilenetv2.pth"

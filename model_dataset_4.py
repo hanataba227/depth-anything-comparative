@@ -1,40 +1,37 @@
-import os
 import cv2
 import torch
+import json
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-class DepthDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        self.rgb_paths = []
-        self.depth_paths = []
+class JsonDepthDataset(Dataset):
+    def __init__(self, json_path, transform=None, resize=(224, 224)):
+        with open(json_path, 'r') as f:
+            self.data = json.load(f)
         self.transform = transform
-        self.depth_transform = transforms.ToTensor()
-
-        rgb_root = os.path.join(root_dir, "rgb")
-        depth_root = os.path.join(root_dir, "pseudo_depth")
-
-        for scene in os.listdir(rgb_root):
-            rgb_scene_path = os.path.join(rgb_root, scene)
-            depth_scene_path = os.path.join(depth_root, scene)
-
-            for fname in os.listdir(rgb_scene_path):
-                if not fname.endswith(('.png', '.jpg', '.jpeg')):
-                    continue
-
-                self.rgb_paths.append(os.path.join(rgb_scene_path, fname))
-                self.depth_paths.append(os.path.join(depth_scene_path, os.path.splitext(fname)[0] + ".png"))
+        self.resize = resize
 
     def __len__(self):
-        return len(self.rgb_paths)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        rgb = Image.open(self.rgb_paths[idx]).convert("RGB")
-        depth = cv2.imread(self.depth_paths[idx], cv2.IMREAD_GRAYSCALE) / 255.0  # [0, 1] 정규화
-        depth = torch.from_numpy(depth).unsqueeze(0).float()
+        item = self.data[idx]
 
+        rgb_path = item['rgb'].replace("\\", "/")
+        depth_path = item['depth'].replace("\\", "/")
+
+        # RGB 처리
+        rgb = Image.open(rgb_path).convert("RGB")
         if self.transform:
             rgb = self.transform(rgb)
+
+        # Depth 처리
+        depth_raw = cv2.imread(depth_path, cv2.IMREAD_GRAYSCALE)
+        if depth_raw is None:
+            raise FileNotFoundError(f"Cannot read depth: {depth_path}")
+
+        depth_resized = cv2.resize(depth_raw, self.resize, interpolation=cv2.INTER_NEAREST)
+        depth = torch.tensor(depth_resized / 255.0).unsqueeze(0).float()
 
         return rgb, depth
