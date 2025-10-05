@@ -1,6 +1,13 @@
+.env
+__pycache__/*
 checkpoints/*
+dataset/*
+test/*
+trained_models/*
+dataset_paths/*
+comparison_output/*
+DDAD/*
 weights/*
-dataset/__pycache__/*
 depth_anything_v2/__pycache__/*
 utils/__pycache__/*
 visuals/*
