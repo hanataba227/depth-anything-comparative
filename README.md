@@ -1,9 +1,11 @@
 # depth-anything-comparative
 **모빌리티 환경 적용을 위한 Depth-Anything V2 모델의 다각적 최적화 전략 분석**
-> 프로젝트 개요 : Depth-Anything V2**를 **모빌리티 환경**에 적용하기 위한 지식 증류, 프루닝, 양자화, TensorRT 기반 **최적화 전략** 비교 및 분석
 
-> 목표 : **정확도를 유지**하며 **모델 크기, 지연시간, 메모리**를 줄이는 효율적인 전략을 정리
-
+| 목차 | 내용 |
+|---|---|
+| 목표 | 고정밀 단안 깊이(depth) 추정 모델 Depth-Anything V2를 자율주행, 드론, 로봇 등 모빌리티 시스템에 실시간 적용 가능하도록 경량화하고, 다양한 하드웨어 환경에 맞는 최적화 전략을 수립 |
+| 수행기간 | 2025. 03. ~ 2025. 06 |
+| 프로젝트 요약 | ViT 기반의 고정밀 단안 깊이(depth) 추정 모델인 Depth-Anything V2를 모빌리티 환경에 적합하도록 경량화하는 것을 목적으로 함. 이를 위해 지식 증류, 직접 경량화(프루닝 및 양자화), TensorRT 최적화라는 세가지 방법을 사용하여 모델을 최적화하였으며, 각 방법의 성능과 효율을 정량적으로 비교 분석하였음 |
 
 <div align="center">
     <div style="display: flex;">
@@ -13,16 +15,23 @@
     </div>
 </div>
 
-
 ---
 
 ## 🔎 개요 (Overview)
 - 대상 모델 : **Depth-Anything V2** (Vision Transformer 계열 단안 깊이 추정)  
 - 데이터셋 : **DDAD** (Dense Depth for Autonomous Driving), 일부 ETRI 자율주행 데이터 병행  
 - 최적화 축 :
-  1) **지식 증류(KD)**: Depth-Anything V2 Base → MobileNetV2/축소형 학생  
-  2) **직접 경량화**: **Pruning**, **Dynamic INT8 Quantization**(PyTorch)  
-  3) **플랫폼 가속**: **ONNX → TensorRT** 변환, FP16 최적화 및 엔진 튜닝
+  - 지식 증류(Distillation)
+    1) Teacher 모델: Depth-Anything V2 Base
+    2) Student 모델: MobileNetV2 기반 또는 축소형 Depth-Anything 구조
+    3) 비라벨 데이터(Pseudo-depth) + 라벨 데이터 활용
+  - 직접 경량화
+    1) 비정형 Pruning 적용
+    2) Dynamic INT8 양자화 적용
+  - 다양한 구조 조합 및 성능 테스트
+    1) TensorRT 기반 최적화
+    2) ONNX 변환 후 TensorRT 엔진 생성
+    3) Precision(FP16), 해상도, Batch size 조합 실험 (총 24개 조합)
 
 ---
 
