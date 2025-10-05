@@ -1,6 +1,9 @@
-#gitignore 파일
-#업로드하지 않을 파일 리스트 정리
-
 .env
+__pycache__/*
+checkpoints/*
+dataset/*
+test/*
+trained_models/*
+dataset_paths/*
+comparison_output/*
 DDAD/*
-__pycache__
