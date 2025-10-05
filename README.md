@@ -1,7 +1,8 @@
 # depth-anything-comparative
-**Depth-Anything V2**를 **모빌리티 환경**에 적용하기 위한 지식 증류, 프루닝, 양자화, TensorRT 기반 **최적화 전략** 비교 및 분석 프로젝트
+**모빌리티 환경 적용을 위한 Depth-Anything V2 모델의 다각적 최적화 전략 분석**
+> 프로젝트 개요 : Depth-Anything V2**를 **모빌리티 환경**에 적용하기 위한 지식 증류, 프루닝, 양자화, TensorRT 기반 **최적화 전략** 비교 및 분석
 
-> 목표: **정확도를 유지**하며 **모델 크기, 지연시간, 메모리**를 줄이는 효율적인 전략을 정리
+> 목표 : **정확도를 유지**하며 **모델 크기, 지연시간, 메모리**를 줄이는 효율적인 전략을 정리
 
 
 <div align="center">
@@ -16,9 +17,9 @@
 ---
 
 ## 🔎 개요 (Overview)
-- 대상 모델: **Depth-Anything V2** (Vision Transformer 계열 단안 깊이 추정)  
-- 데이터셋: **DDAD** (Dense Depth for Autonomous Driving), 일부 ETRI 자율주행 데이터 병행  
-- 최적화 축:
+- 대상 모델 : **Depth-Anything V2** (Vision Transformer 계열 단안 깊이 추정)  
+- 데이터셋 : **DDAD** (Dense Depth for Autonomous Driving), 일부 ETRI 자율주행 데이터 병행  
+- 최적화 축 :
   1) **지식 증류(KD)**: Depth-Anything V2 Base → MobileNetV2/축소형 학생  
   2) **직접 경량화**: **Pruning**, **Dynamic INT8 Quantization**(PyTorch)  
   3) **플랫폼 가속**: **ONNX → TensorRT** 변환, FP16 최적화 및 엔진 튜닝
@@ -59,9 +60,9 @@
 ---
 
 ## 🧩 설계 포인트 & 권장 전략
-- **CPU 환경**: Dynamic INT8으로 모델 크기, 메모리 절감  
-- **GPU 환경**: FP16 TensorRT로 실시간 성능 확보  
-- **정확도 유지**: 학생 모델은 증강, Loss 설계 및 progressive unfreezing 적용
+- **CPU 환경** : Dynamic INT8으로 모델 크기, 메모리 절감  
+- **GPU 환경** : FP16 TensorRT로 실시간 성능 확보  
+- **정확도 유지** : 학생 모델은 증강, Loss 설계 및 progressive unfreezing 적용
 
 ---
 
