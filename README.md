@@ -10,7 +10,7 @@
 <div align="center">
     <div style="display: flex;">
         <img src="https://github.com/user-attachments/assets/2d847590-608b-48ff-95a1-326d68e842ce" alt="모델 시각화" style="width: 800px;"/>
-          <h3>경량화 모델 시각화</h3>
+          <h3>Depth-Anything V2 경량화 모델 시각화</h3>
     <p>(Input, Base V2, FP32, Pruned(50%), Pruned(50%) + Dyn INT8, Dyn INT8)</p>
     </div>
 </div>
