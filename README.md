@@ -3,6 +3,16 @@
 
 > 목표: **정확도를 유지**하며 **모델 크기, 지연시간, 메모리**를 줄이는 효율적인 전략을 정리
 
+
+<div align="center">
+    <div style="display: flex;">
+        <img src="https://github.com/user-attachments/assets/2d847590-608b-48ff-95a1-326d68e842ce" alt="모델 시각화" style="width: 800px;"/>
+          <h3>경량화 모델 시각화</h3>
+    <p>(Input, Base V2, FP32, Pruned(50%), Pruned(50%) + Dyn INT8, Dyn INT8)</p>
+    </div>
+</div>
+
+
 ---
 
 ## 🔎 개요 (Overview)
@@ -20,7 +30,8 @@
   1) Dynamic INT8 적용 시 모델 크기 **−65.3%** (371.9MB → 129.0MB)
   2) 추론시간 **−10.4%** (1214ms → 1098.5ms)
 - **GPU (TensorRT)**  
-  1) FP16 + 해상도 560×560 + BS=1에서 지연시간 **33.78ms** 달성(**약 61.5% 개선**, Base 87.85ms 대비) → **~29.6 FPS** 실시간 추론 가능. 
+  1) FP16 + 해상도 560×560 + BS=1에서 지연시간 **33.78ms** 달성
+  2) **약 61.5% 개선** (Base 87.85ms 대비) → **29.6 FPS**
 
 > 정리: **CPU 환경**에서는 **Dynamic INT8**이, **GPU 환경**에서는 **FP16 TensorRT** 조합이 가장 효율적
 
@@ -55,5 +66,6 @@
 ---
 
 ## 🧾 참고 문헌
-- Depth-Anything V2
-- DDAD dataset (TRI-ML)  
+
+- [Depth-Anything V2](https://github.com/DepthAnything/Depth-Anything-V2)
+- [DDAD dataset](https://github.com/TRI-ML/DDAD)
